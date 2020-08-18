@@ -10,7 +10,7 @@ export default function Home(props) {
   const [tasks, setTasks] = useState([]);
   const [filterSearch, setFilterSearch] = useState('');
   let taskList = [];
-  
+
   if(tasks.length == 0){
     fetch(url)
     .then(response => response.json())
@@ -26,17 +26,21 @@ export default function Home(props) {
   
   if(filterSearch.length > 0){
     let filteredData = tasks.find(item => item.id == filterSearch); 
-    taskList.push(
-      <Todo
-        id={filteredData.id}
-        name={filteredData.title}
-        completed={filteredData.completed}
-        key={filteredData.id}
-        toggleTaskCompleted={toggleTaskCompleted}
-        deleteTask={deleteTask}
-        editTask={editTask}
-      />
-    );
+    if(filteredData){
+      taskList.push(
+        <Todo
+          id={filteredData.id}
+          name={filteredData.title}
+          completed={filteredData.completed}
+          key={filteredData.id}
+          toggleTaskCompleted={toggleTaskCompleted}
+          deleteTask={deleteTask}
+          editTask={editTask}
+        />
+      );
+    } else{
+      taskList.push(<span>no data found</span>);
+    }
   } else{
      taskList = tasks.map(task => (
         <Todo
