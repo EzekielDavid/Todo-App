@@ -1,65 +1,109 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React, { useState, useEffect } from "react";
+import Todo from "./components/todo";
+import Form from "./components/form";
+import FilterButton from "./components/filter"; 
+import { List } from "@material-ui/core"
 
-export default function Home() {
+const url = `https://my-json-server.typicode.com/wsh-startup/mock-api/tasks`;
+
+export default function Home(props) { 
+  const [tasks, setTasks] = useState([]);
+  const [filterSearch, setFilterSearch] = useState('');
+  let taskList = [];
+  
+  if(tasks.length == 0){
+    fetch(url)
+    .then(response => response.json())
+    .then(jsonData => {
+      // jsonData is parsed json object received from url 
+      setTasks(jsonData);
+    })
+    .catch((error) => { 
+      console.error(error)
+    });
+  }
+
+  
+  if(filterSearch.length > 0){
+    let filteredData = tasks.find(item => item.id == filterSearch); 
+    taskList.push(
+      <Todo
+        id={filteredData.id}
+        name={filteredData.title}
+        completed={filteredData.completed}
+        key={filteredData.id}
+        toggleTaskCompleted={toggleTaskCompleted}
+        deleteTask={deleteTask}
+        editTask={editTask}
+      />
+    );
+  } else{
+     taskList = tasks.map(task => (
+        <Todo
+          id={task.id}
+          name={task.title}
+          completed={task.completed}
+          key={task.id}
+          toggleTaskCompleted={toggleTaskCompleted}
+          deleteTask={deleteTask}
+          editTask={editTask}
+        />
+      )); 
+  }
+  
+  
+  function toggleTaskCompleted(id) {
+    const updatedTasks = tasks.map(task => { 
+      if (id === task.id) { 
+        return {...task, completed: !task.completed}
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+  }
+
+  function addTask(name) {
+    if(tasks){ 
+      const [lastItem] = tasks.slice(-1) 
+      const lastID = lastItem.id++; 
+      const newTask = { id: lastID , title: name, completed: false }; 
+      setTasks([...tasks, newTask]); 
+    }
+  }
+  
+  function editTask(id, newName) {
+    const editedTaskList = tasks.map(task => {
+    // if this task has the same ID as the edited task
+      if (id === task.id) {
+        //
+        return {...task, title: newName}
+      }
+      return task;
+    });
+    setTasks(editedTaskList);
+  }
+
+  function deleteTask(id) {
+    const remainingTasks = tasks.filter(task => id !== task.id);
+    setTasks(remainingTasks);
+  }
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+    <div className="todoapp stack-large">
+      <Form addTask={addTask} />
+      <div className="filters btn-group stack-exception">
+        <FilterButton setFilterSearch={setFilterSearch} />
+      </div>
+      <h2 id="list-heading">Task List</h2>
+      <ul
+        role="list"
+        className="todo-list stack-large stack-exception"
+        aria-labelledby="list-heading"
+      >
+        <List >
+        {taskList}
+        </List>
+      </ul>
     </div>
-  )
+  );
 }
